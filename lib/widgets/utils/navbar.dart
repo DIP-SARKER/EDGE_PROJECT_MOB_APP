@@ -1,3 +1,4 @@
+import 'package:costtracker/widgets/utils/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:icons_plus/icons_plus.dart';
 
@@ -19,38 +20,27 @@ class _FBottomBarState extends State<FBottomBar> {
   Widget build(BuildContext context) {
     return BottomNavigationBar(
       currentIndex: widget.currentIndex,
-      selectedLabelStyle: TextStyle(fontSize: 11),
+      selectedLabelStyle: TextStyle(fontSize: 13),
       unselectedLabelStyle: TextStyle(fontSize: 11),
+      selectedItemColor: FColors.primary,
       type: BottomNavigationBarType.fixed,
       onTap: widget.ontapMethod,
       items: [
         BottomNavigationBarItem(
-          icon: Icon(
-            Iconsax.home_outline,
-            size: 20,
-          ),
-          label: "HOME",
+          icon: Icon(FontAwesome.house_chimney_solid, size: 20),
+          label: "DashBoard",
         ),
         BottomNavigationBarItem(
-          icon: Icon(
-            Iconsax.heart_outline,
-            size: 20,
-          ),
-          label: "WISHLIST",
+          icon: Icon(FontAwesome.money_bill_trend_up_solid, size: 20),
+          label: "Transaction",
         ),
         BottomNavigationBarItem(
-          icon: Icon(
-            Iconsax.shopping_bag_outline,
-            size: 20,
-          ),
-          label: "ORDER",
+          icon: Icon(FontAwesome.book_open_solid, size: 20),
+          label: "Report",
         ),
         BottomNavigationBarItem(
-          icon: Icon(
-            FontAwesome.user,
-            size: 20,
-          ),
-          label: "LOGIN",
+          icon: Icon(FontAwesome.sliders_solid, size: 20),
+          label: "Settings",
         ),
       ],
     );

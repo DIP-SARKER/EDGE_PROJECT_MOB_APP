@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:charts_flutter/flutter.dart' as charts;
 
 class BudgetReportsScreen extends StatefulWidget {
   const BudgetReportsScreen({super.key});
@@ -10,8 +9,8 @@ class BudgetReportsScreen extends StatefulWidget {
 
 class BudgetReportsScreenState extends State<BudgetReportsScreen> {
   double monthlyBudget = 1000.0;
-  double currentSpending = 750.0; // Example current spending
-  double previousMonthSpending = 800.0; // Example previous month spending
+  double currentSpending = 750.0;
+  double previousMonthSpending = 800.0;
   double foodSpending = 300.0;
   double entertainmentSpending = 200.0;
   double utilitiesSpending = 250.0;
@@ -19,59 +18,10 @@ class BudgetReportsScreenState extends State<BudgetReportsScreen> {
   @override
   Widget build(BuildContext context) {
     double budgetPercentage = (currentSpending / monthlyBudget) * 100;
-    Color progressColor = Colors.green;
-    if (budgetPercentage > 80) {
-      progressColor = Colors.orange;
-    }
-    if (budgetPercentage > 95) {
-      progressColor = Colors.red;
-    }
-
-    var data = [
-      SpendingCategory('Food', foodSpending, Colors.blue),
-      SpendingCategory('Entertainment', entertainmentSpending, Colors.green),
-      SpendingCategory('Utilities', utilitiesSpending, Colors.orange),
-      SpendingCategory(
-        'Other',
-        currentSpending -
-            foodSpending -
-            entertainmentSpending -
-            utilitiesSpending,
-        Colors.grey,
-      ),
-    ];
-
-    var series = [
-      charts.Series(
-        id: 'Spending',
-        domainFn: (SpendingCategory spending, _) => spending.category,
-        measureFn: (SpendingCategory spending, _) => spending.amount,
-        colorFn:
-            (SpendingCategory spending, _) =>
-                charts.ColorUtil.fromDartColor(spending.color),
-        data: data,
-        labelAccessorFn:
-            (SpendingCategory row, _) => '${row.category}: \$${row.amount}',
-      ),
-    ];
-
-    var barData = [
-      SpendingMonth('Current Month', currentSpending, Colors.blue),
-      SpendingMonth('Previous Month', previousMonthSpending, Colors.orange),
-    ];
-
-    var barSeries = [
-      charts.Series(
-        id: 'Monthly Spending',
-        domainFn: (SpendingMonth month, _) => month.month,
-        measureFn: (SpendingMonth month, _) => month.amount,
-        colorFn:
-            (SpendingMonth month, _) =>
-                charts.ColorUtil.fromDartColor(month.color),
-        data: barData,
-        labelAccessorFn: (SpendingMonth row, _) => '\$${row.amount}',
-      ),
-    ];
+    Color progressColor =
+        budgetPercentage > 95
+            ? Colors.red
+            : (budgetPercentage > 80 ? Colors.orange : Colors.green);
 
     return Scaffold(
       appBar: AppBar(title: Text('Budget & Reports')),
@@ -118,34 +68,81 @@ class BudgetReportsScreenState extends State<BudgetReportsScreen> {
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 16),
-            SizedBox(
-              height: 300,
-              child: charts.PieChart(
-                series,
-                animate: true,
-                defaultRenderer: charts.ArcRendererConfig(
-                  arcRendererDecorators: [charts.ArcLabelDecorator()],
-                ),
-              ),
-            ),
+            _buildSpendingBreakdown(),
             SizedBox(height: 24),
             Text(
               'Monthly Spending Comparison',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 16),
-            SizedBox(
-              height: 300,
-              child: charts.BarChart(
-                barSeries,
-                animate: true,
-                barRendererDecorator: charts.BarLabelDecorator<String>(),
-                domainAxis: charts.OrdinalAxisSpec(),
-              ),
-            ),
+            _buildMonthlyComparison(),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildSpendingBreakdown() {
+    var data = [
+      SpendingCategory('Food', foodSpending, Colors.blue),
+      SpendingCategory('Entertainment', entertainmentSpending, Colors.green),
+      SpendingCategory('Utilities', utilitiesSpending, Colors.orange),
+      SpendingCategory(
+        'Other',
+        currentSpending -
+            foodSpending -
+            entertainmentSpending -
+            utilitiesSpending,
+        Colors.grey,
+      ),
+    ];
+
+    return Column(
+      children:
+          data.map((category) {
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4.0),
+              child: Row(
+                children: [
+                  Container(width: 20, height: 20, color: category.color),
+                  SizedBox(width: 8),
+                  Text(
+                    '${category.category}: \$${category.amount.toStringAsFixed(2)}',
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+    );
+  }
+
+  Widget _buildMonthlyComparison() {
+    return Column(
+      children: [
+        _buildBar('Current Month', currentSpending, Colors.blue),
+        _buildBar('Previous Month', previousMonthSpending, Colors.orange),
+      ],
+    );
+  }
+
+  Widget _buildBar(String label, double value, Color color) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: TextStyle(fontWeight: FontWeight.bold)),
+        SizedBox(height: 4),
+        Container(
+          width: double.infinity,
+          height: 20,
+          color: Colors.grey[300],
+          child: FractionallySizedBox(
+            widthFactor: value / monthlyBudget,
+            alignment: Alignment.centerLeft,
+            child: Container(color: color),
+          ),
+        ),
+        SizedBox(height: 8),
+      ],
     );
   }
 
@@ -192,12 +189,4 @@ class SpendingCategory {
   final Color color;
 
   SpendingCategory(this.category, this.amount, this.color);
-}
-
-class SpendingMonth {
-  final String month;
-  final double amount;
-  final Color color;
-
-  SpendingMonth(this.month, this.amount, this.color);
 }

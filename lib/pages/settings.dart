@@ -25,14 +25,13 @@ class SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
-    if (!mounted) return; // Check if the widget is mounted
+    if (!mounted) return;
     setState(() {
       _currency = prefs.getString('currency') ?? 'USD';
       _language = prefs.getString('language') ?? 'English';
       _isDarkMode = prefs.getBool('darkMode') ?? false;
       _isBiometricEnabled = prefs.getBool('biometric') ?? false;
     });
-    _updateTheme();
   }
 
   Future<void> _saveSettings() async {
@@ -41,15 +40,6 @@ class SettingsScreenState extends State<SettingsScreen> {
     await prefs.setString('language', _language);
     await prefs.setBool('darkMode', _isDarkMode);
     await prefs.setBool('biometric', _isBiometricEnabled);
-    _updateTheme();
-  }
-
-  void _updateTheme() {
-    if (_isDarkMode) {
-      ThemeData.dark();
-    } else {
-      ThemeData.light();
-    }
   }
 
   Future<void> _checkBiometrics() async {
@@ -57,34 +47,38 @@ class SettingsScreenState extends State<SettingsScreen> {
     try {
       canCheckBiometrics = await auth.canCheckBiometrics;
     } catch (e) {
-      if (!mounted) return; // Check if the widget is mounted
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text('Error'),
-            content: Text('Failed to check biometrics.'),
-            actions: <Widget>[
-              TextButton(
-                child: Text('OK'),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-              ),
-            ],
-          );
-        },
-      );
-      return; // Return to avoid further execution if error occurs
+      if (!mounted) return;
+      _showErrorDialog('Failed to check biometrics.');
+      return;
     }
 
     if (!canCheckBiometrics) {
-      if (!mounted) return; // Check if the widget is mounted
+      if (!mounted) return;
       setState(() {
         _isBiometricEnabled = false;
       });
       _saveSettings();
     }
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Error'),
+          content: Text(message),
+          actions: <Widget>[
+            TextButton(
+              child: Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -93,27 +87,134 @@ class SettingsScreenState extends State<SettingsScreen> {
       appBar: AppBar(title: Text('Settings & Profile')),
       body: ListView(
         children: <Widget>[
-          // ... (rest of your build method)
+          SizedBox(height: 20),
           ListTile(
+            leading: Icon(Icons.person),
+            title: Text('Profile'),
+            subtitle: Text('Manage your profile details'),
+            onTap: () {},
+          ),
+          Divider(),
+          ListTile(
+            leading: Icon(Icons.monetization_on),
+            title: Text('Currency'),
+            subtitle: Text(_currency),
+            onTap: () {
+              _showCurrencyDialog();
+            },
+          ),
+          ListTile(
+            leading: Icon(Icons.language),
+            title: Text('Language'),
+            subtitle: Text(_language),
+            onTap: () {
+              _showLanguageDialog();
+            },
+          ),
+          SwitchListTile(
+            title: Text('Dark Mode'),
+            secondary: Icon(Icons.dark_mode),
+            value: _isDarkMode,
+            onChanged: (bool value) {
+              setState(() {
+                _isDarkMode = value;
+              });
+              _saveSettings();
+            },
+          ),
+          SwitchListTile(
+            title: Text('Enable Biometrics'),
+            secondary: Icon(Icons.fingerprint),
+            value: _isBiometricEnabled,
+            onChanged: (bool value) {
+              setState(() {
+                _isBiometricEnabled = value;
+              });
+              _saveSettings();
+            },
+          ),
+          Divider(),
+          ListTile(
+            leading: Icon(Icons.backup),
             title: Text('Backup Data'),
             onTap: () {
-              if (!mounted) return; // Check if the widget is mounted
               ScaffoldMessenger.of(
                 context,
               ).showSnackBar(SnackBar(content: Text('Backup initiated')));
             },
           ),
           ListTile(
+            leading: Icon(Icons.restore),
             title: Text('Restore Data'),
             onTap: () {
-              if (!mounted) return; // Check if the widget is mounted
               ScaffoldMessenger.of(
                 context,
               ).showSnackBar(SnackBar(content: Text('Restore initiated')));
             },
           ),
+          ListTile(
+            leading: Icon(Icons.logout),
+            title: Text('Logout'),
+            onTap: () {
+              Navigator.of(context).pop();
+            },
+          ),
         ],
       ),
+    );
+  }
+
+  void _showCurrencyDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Select Currency'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children:
+                ['USD', 'EUR', 'INR', 'BDT'].map((currency) {
+                  return ListTile(
+                    title: Text(currency),
+                    onTap: () {
+                      setState(() {
+                        _currency = currency;
+                      });
+                      _saveSettings();
+                      Navigator.of(context).pop();
+                    },
+                  );
+                }).toList(),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showLanguageDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Select Language'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children:
+                ['English', 'Spanish', 'French', 'German'].map((lang) {
+                  return ListTile(
+                    title: Text(lang),
+                    onTap: () {
+                      setState(() {
+                        _language = lang;
+                      });
+                      _saveSettings();
+                      Navigator.of(context).pop();
+                    },
+                  );
+                }).toList(),
+          ),
+        );
+      },
     );
   }
 }
